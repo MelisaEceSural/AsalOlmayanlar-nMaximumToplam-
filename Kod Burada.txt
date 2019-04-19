@@ -1,0 +1,146 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text.RegularExpressions;
+
+public static class Program
+    {
+
+        public static Dictionary<int, bool> PrimeCache = new Dictionary<int, bool>();
+
+    private static string Gir()
+    {
+        const string giris = @" 215
+                                193 124
+                                117 237 442
+                                218 935 347 235
+                                320 804 522 417 345
+                                229 601 723 835 133 124
+                                248 202 277 433 207 263 257
+                                359 464 504 528 516 716 871 182
+                                461 441 426 656 863 560 380 171 923
+                                381 348 573 533 447 632 387 176 975 449
+                                223 711 445 645 245 543 931 532 937 541 444
+                                330 131 333 928 377 733 017 778 839 168 197 197
+                                131 171 522 137 217 224 291 413 528 520 227 229 928
+                                223 626 034 683 839 053 627 310 713 999 629 817 410 121
+                                924 622 911 233 325 139 721 218 253 223 107 233 230 124 233";
+        return giris;
+    }
+
+    private static string[] GirdiDiziyeDönüstürme(this string girdi)
+    {
+        return girdi.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
+    }
+
+
+    private static int[,] IkiBoyutDönüstür(this string[] satirdizisi)
+    {
+        var yakala = new int[satirdizisi.Length, satirdizisi.Length + 1];
+
+        for (var satir = 0; satir < satirdizisi.Length; satir++)
+        {
+            var sayi = satirdizisi[satir].SayiAl();
+
+            for (var sütun = 0; sütun < sayi.Length; sütun++)
+                yakala[satir, sütun] = sayi[sütun];
+        }
+        return yakala;
+    }
+
+
+    private static int[] SayiAl(this string satirs)
+    {
+        return
+            Regex
+                .Matches(satirs, "[0-9]+")
+                .Cast<Match>()
+                .Select(m => int.Parse(m.Value)).ToArray();
+    }
+
+    private static int[,] AsalSifirYap(this int[,] yakala)
+    {
+        var length = yakala.GetLength(0);
+        for (var i = 0; i < length; i++)
+        {
+            for (var j = 0; j < length; j++)
+            {
+                if (yakala[i, j] == 0) continue;
+                if (Asalmi(yakala[i, j]))
+                    yakala[i, j] = 0;
+            }
+        }
+        return yakala;
+    }
+
+
+    private static int NodeYürü(this int[,] yakala)
+    {
+        var GeciciSonuc = yakala;
+        var length = yakala.GetLength(0);
+
+
+
+        for (var i = length - 2; i >= 0; i--)
+        {
+            for (var j = 0; j < length; j++)
+            {
+                var c = GeciciSonuc[i, j];
+                var a = GeciciSonuc[i + 1, j];
+                var b = GeciciSonuc[i + 1, j + 1];
+                if ((!Asalmi(c) && !Asalmi(a)) || (!Asalmi(c) && !Asalmi(b)))
+                    yakala[i, j] = c + Math.Max(a, b);
+            }
+        }
+        return yakala[0, 0];
+    }
+
+
+    public static bool Asalmi(this int sayi)
+    {
+        // Test whether the parameter is a prime number.
+        if (PrimeCache.ContainsKey(sayi))
+        {
+            bool value;
+            PrimeCache.TryGetValue(sayi, out value);
+            return value;
+        }
+        if ((sayi & 1) == 0)
+        {
+            if (sayi == 2)
+            {
+                if (!PrimeCache.ContainsKey(sayi)) PrimeCache.Add(sayi, true);
+                return true;
+            }
+            if (!PrimeCache.ContainsKey(sayi)) PrimeCache.Add(sayi, false);
+            return false;
+        }
+
+        for (var i = 3; i * i <= sayi; i += 2)
+        {
+            if (sayi % i == 0)
+            {
+                if (!PrimeCache.ContainsKey(sayi)) PrimeCache.Add(sayi, false);
+                return false;
+            }
+        }
+        var kontrol = sayi != 1;
+        if (!PrimeCache.ContainsKey(sayi)) PrimeCache.Add(sayi, kontrol);
+        return kontrol;
+    }
+
+
+    private static void Main(string[] args)
+        {
+            var sonuc = Gir()
+                .GirdiDiziyeDönüstürme()
+                .IkiBoyutDönüstür()
+                .AsalSifirYap()
+                .NodeYürü();
+
+            Console.WriteLine($"Asal olmayan sayilarin yukarýdan asagýya dogru toplami:  {sonuc}");
+            Console.ReadKey();
+        }
+
+   }
+
